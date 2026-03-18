@@ -47,6 +47,18 @@ def get_session() -> Generator[Session]:
         yield session
 
 
+def initialize_database(settings: Settings | None = None):
+    resolved_settings = settings or get_settings()
+    resolved_settings.database_dir.mkdir(parents=True, exist_ok=True)
+    runtime_engine = create_engine_from_settings(resolved_settings)
+    Base.metadata.create_all(runtime_engine)
+
+    with Session(runtime_engine) as session:
+      seed_default_settings(session)
+
+    return runtime_engine
+
+
 def seed_default_settings(session: Session) -> None:
     from app.models.app_setting import AppSetting
 

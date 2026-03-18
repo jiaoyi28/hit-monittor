@@ -21,7 +21,48 @@
 - `docs/superpowers/specs/`：设计文档
 - `docs/superpowers/plans/`：实施计划
 
+## 首次环境初始化
+
+### 1. 初始化后端依赖
+
+在 `backend/` 目录执行：
+
+```powershell
+uv sync --dev
+```
+
+### 2. 初始化前端依赖
+
+在 `frontend/` 目录执行：
+
+```powershell
+npm install
+```
+
+### 3. 说明
+
+- `uv sync --dev` 会安装后端运行与测试所需依赖
+- `npm install` 会安装前端开发、测试和构建所需依赖
+- `D:\sqlite` 在后端启动时会自动检查并创建，不需要手工预建
+
 ## 本地启动
+
+### 一步启动脚本
+
+在项目根目录执行：
+
+```powershell
+.\start-dev.bat
+```
+
+这个脚本会按顺序完成：
+
+- 后端依赖初始化：`uv sync --dev`
+- 前端依赖初始化：`npm install`
+- 在新窗口启动后端服务
+- 在新窗口启动前端开发服务
+
+如果你只是想手动分步启动，也可以继续使用下面的单独命令。
 
 ### 1. 启动后端
 

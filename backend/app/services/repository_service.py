@@ -1,3 +1,6 @@
+from urllib.parse import urlparse
+
+from fastapi import HTTPException
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
@@ -5,6 +8,8 @@ from app.models.issue import Issue
 from app.models.pull_request import PullRequest
 from app.models.release import Release
 from app.models.repository import Repository
+from app.services.github_client import GitHubClient
+from app.services.ingestion import GitHubIngestionService
 from app.schemas.repository import (
     RepositoryDetailItem,
     RepositoryDetailResponse,
@@ -16,16 +21,23 @@ from app.schemas.repository import (
 class RepositoryService:
     def list_repositories(self, session: Session) -> list[RepositoryListItem]:
         repositories = session.scalars(select(Repository).order_by(Repository.id)).all()
-        return [
-            RepositoryListItem(
-                id=item.id,
-                full_name=item.full_name,
-                description=item.description,
-                html_url=item.html_url,
-                enabled=item.enabled,
-            )
-            for item in repositories
-        ]
+        return [self._to_list_item(item) for item in repositories]
+
+    def add_repository_from_url(
+        self,
+        session: Session,
+        url: str,
+        github_client: GitHubClient | None = None,
+    ) -> RepositoryListItem:
+        full_name = self._extract_full_name(url)
+        client = github_client or GitHubClient()
+        GitHubIngestionService(session=session, client=client).sync_repository(full_name)
+
+        repository = session.scalar(select(Repository).where(Repository.full_name == full_name))
+        if repository is None:
+            raise HTTPException(status_code=502, detail="Repository sync completed without storing repository data")
+
+        return self._to_list_item(repository)
 
     def get_repository_detail(self, session: Session, repository_id: int) -> RepositoryDetailResponse:
         repository = session.get(Repository, repository_id)
@@ -56,4 +68,26 @@ class RepositoryService:
                 )
                 for item in releases
             ],
+        )
+
+    @staticmethod
+    def _extract_full_name(url: str) -> str:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or parsed.netloc not in {"github.com", "www.github.com"}:
+            raise HTTPException(status_code=400, detail="Only GitHub repository URLs are supported")
+
+        segments = [segment for segment in parsed.path.split("/") if segment]
+        if len(segments) < 2:
+            raise HTTPException(status_code=400, detail="Repository URL must include owner and repository name")
+
+        return f"{segments[0]}/{segments[1]}"
+
+    @staticmethod
+    def _to_list_item(item: Repository) -> RepositoryListItem:
+        return RepositoryListItem(
+            id=item.id,
+            full_name=item.full_name,
+            description=item.description,
+            html_url=item.html_url,
+            enabled=item.enabled,
         )

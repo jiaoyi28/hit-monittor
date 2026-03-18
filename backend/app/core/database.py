@@ -2,7 +2,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import Settings, get_settings
 
@@ -27,6 +27,10 @@ def create_engine_from_settings(settings: Settings | None = None):
     return create_engine(create_sqlite_url(resolved_settings), future=True)
 
 
+engine = create_engine_from_settings()
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+
+
 @contextmanager
 def session_scope(database_url: str | None = None) -> Generator[Session]:
     if database_url is None:
@@ -35,6 +39,11 @@ def session_scope(database_url: str | None = None) -> Generator[Session]:
         engine = create_engine(database_url, future=True)
 
     with Session(engine) as session:
+        yield session
+
+
+def get_session() -> Generator[Session]:
+    with SessionLocal() as session:
         yield session
 
 

@@ -1,0 +1,22 @@
+[project]
+name = "hit-monittor-backend"
+version = "0.1.0"
+description = "Windows 本机 GitHub 个人监控台后端"
+readme = "../README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115.0",
+  "httpx>=0.28.0",
+  "pydantic-settings>=2.8.0",
+  "sqlalchemy>=2.0.39",
+  "uvicorn>=0.34.0"
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.5"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

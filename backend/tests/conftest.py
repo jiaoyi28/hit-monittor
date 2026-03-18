@@ -3,6 +3,7 @@ from collections.abc import Generator
 import pytest
 from sqlalchemy.orm import Session
 
+import app.models
 from app.core.database import Base, seed_default_settings, session_scope
 
 

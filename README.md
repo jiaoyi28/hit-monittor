@@ -1,27 +1,27 @@
 # hit-monittor
 
-运行在 Windows 本机环境的个人 GitHub 监控台。
+运行在 Windows 本地环境的个人 GitHub 监控台。
 
 ## 技术栈
 
-- 前端：`npm + React + Tailwind CSS + shadcn/ui`
+- 前端：`npm + React + Tailwind CSS`
 - 后端：`Python + uv + FastAPI`
-- 数据库：`SQLite`
+- 数据存储：`SQLite`
 
 ## 约束
 
-- 文档、代码、中文注释和中文文案统一使用 UTF-8 编码
-- SQLite 默认目录为 `D:\sqlite`
-- V1 仅支持 GitHub 公开仓库
+- 文档、代码注释和中文文案统一使用 UTF-8 编码。
+- SQLite 默认目录为 `D:\sqlite`。
+- 当前仅支持 GitHub 公开仓库。
 
 ## 目录结构
 
-- `frontend/`：前端应用，负责仪表盘、仓库列表、仓库详情和配置页
-- `backend/`：后端 API、SQLite 初始化、GitHub 抓取、AI 分析和调度器
-- `docs/superpowers/specs/`：设计文档
-- `docs/superpowers/plans/`：实施计划
+- `frontend/`：前端应用，负责总览、仓库列表、仓库详情和设置页。
+- `backend/`：后端 API、SQLite 初始化、GitHub 抓取、分析服务和调度逻辑。
+- `docs/superpowers/specs/`：设计文档。
+- `docs/superpowers/plans/`：实现计划。
 
-## 首次环境初始化
+## 首次初始化
 
 ### 1. 初始化后端依赖
 
@@ -39,15 +39,9 @@ uv sync --dev
 npm install
 ```
 
-### 3. 说明
-
-- `uv sync --dev` 会安装后端运行与测试所需依赖
-- `npm install` 会安装前端开发、测试和构建所需依赖
-- `D:\sqlite` 在后端启动时会自动检查并创建，不需要手工预建
-
 ## 本地启动
 
-### 一步启动脚本
+### 一步启动
 
 在项目根目录执行：
 
@@ -55,16 +49,14 @@ npm install
 .\start-dev.bat
 ```
 
-这个脚本会按顺序完成：
+这个脚本会顺序完成：
 
 - 后端依赖初始化：`uv sync --dev`
 - 前端依赖初始化：`npm install`
 - 在新窗口启动后端服务
 - 在新窗口启动前端开发服务
 
-如果你只是想手动分步启动，也可以继续使用下面的单独命令。
-
-### 1. 启动后端
+### 手动启动后端
 
 在 `backend/` 目录执行：
 
@@ -72,21 +64,19 @@ npm install
 uv run uvicorn app.main:app --reload
 ```
 
-默认会：
+后端启动时会自动：
 
-- 自动检查并创建 `D:\sqlite`
-- 自动初始化数据库文件和默认配置
-- 暴露后端接口到 `http://127.0.0.1:8000`
+- 检查并创建 `D:\sqlite`
+- 初始化数据库文件和默认设置
+- 暴露接口到 `http://127.0.0.1:8000`
 
-### 2. 启动前端
+### 手动启动前端
 
 在 `frontend/` 目录执行：
 
 ```powershell
 npm run dev
 ```
-
-前端默认由 Vite 提供开发服务器。
 
 ## 测试与构建
 
@@ -116,19 +106,28 @@ npm run build
 - `GET /health`：健康检查
 - `GET /api/dashboard`：总览页数据
 - `GET /api/repositories`：仓库列表
+- `POST /api/repositories`：添加仓库
 - `GET /api/repositories/{id}`：仓库详情
-- `GET /api/settings`：当前抓取与分析配置
+- `GET /api/settings`：抓取与分析间隔配置
 - `PATCH /api/settings`：更新抓取与分析间隔
 
 ## 运行时配置
 
-后端当前通过 `Settings` 读取配置，默认前缀为 `HIT_MONITTOR_`。当前已覆盖的核心配置包括：
+后端统一通过环境变量读取配置，变量前缀为 `HIT_MONITTOR_`。
+
+### 数据库
 
 - `HIT_MONITTOR_DATABASE_DIR`
 - `HIT_MONITTOR_DATABASE_NAME`
 
-后续接入 OpenAI 兼容模型时，建议继续沿用相同方式扩展：
+### OpenAI 分析服务
 
-- `api_key`
-- `base_url`
-- `model`
+- `HIT_MONITTOR_OPENAI_BASE_URL`
+- `HIT_MONITTOR_OPENAI_API_KEY`
+- `HIT_MONITTOR_OPENAI_MODEL`
+
+说明：
+
+- OpenAI 相关配置只走后端环境变量，不写入 SQLite，也不在前端设置页中编辑。
+- 大模型分析服务直接使用 OpenAI Python SDK，不再手写 HTTP 调用。
+- 如果未配置 `HIT_MONITTOR_OPENAI_API_KEY`，分析客户端不会初始化，分析流程会保持未启用状态。

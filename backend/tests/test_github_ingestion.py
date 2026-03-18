@@ -74,3 +74,35 @@ def test_ingestion_upserts_repository_issue_pr_release(session) -> None:
     assert issue.github_id == 101
     assert pull_request.github_id == 202
     assert release.github_id == 303
+
+
+class StubGitHubClientWithPullsInIssues(StubGitHubClient):
+    def fetch_repository_bundle(self, full_name: str) -> dict:
+        bundle = super().fetch_repository_bundle(full_name)
+        bundle["issues"].append(
+            {
+                "id": 202,
+                "title": "Add feature",
+                "state": "open",
+                "comments": 5,
+                "user": {"login": "carol"},
+                "html_url": "https://github.com/openai/openai-python/pull/202",
+                "body": "Implements feature",
+                "created_at": "2026-03-17T00:00:00Z",
+                "updated_at": "2026-03-18T02:00:00Z",
+                "pull_request": {"url": "https://api.github.com/repos/openai/openai-python/pulls/202"},
+            }
+        )
+        return bundle
+
+
+def test_ingestion_skips_pull_requests_from_issue_feed(session) -> None:
+    service = GitHubIngestionService(session=session, client=StubGitHubClientWithPullsInIssues())
+
+    service.sync_repository("openai/openai-python")
+
+    issues = session.query(Issue).all()
+    pull_requests = session.query(PullRequest).all()
+
+    assert [issue.github_id for issue in issues] == [101]
+    assert [pull_request.github_id for pull_request in pull_requests] == [202]

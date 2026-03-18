@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.services.analysis_pipeline import AnalysisPipeline
+from app.services.analysis_client import create_analysis_client
 from app.services.github_client import GitHubClient
 from app.services.ingestion import GitHubIngestionService
 
@@ -16,7 +17,7 @@ class SyncService:
     ) -> None:
         self.session = session
         self.github_client = github_client or GitHubClient()
-        self.analysis_client = analysis_client
+        self.analysis_client = analysis_client or create_analysis_client()
 
     def sync_repository(self, full_name: str) -> None:
         GitHubIngestionService(session=self.session, client=self.github_client).sync_repository(full_name)

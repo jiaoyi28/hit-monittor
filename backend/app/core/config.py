@@ -9,6 +9,9 @@ class Settings(BaseSettings):
 
     database_dir: Path = Path(r"D:\sqlite")
     database_name: str = "hit-monittor.db"
+    openai_base_url: str | None = None
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4.1-mini"
 
     @property
     def database_path(self) -> Path:

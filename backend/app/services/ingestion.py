@@ -57,6 +57,9 @@ class GitHubIngestionService:
 
     def _upsert_issues(self, repository_id: int, issues: list[dict[str, Any]]) -> None:
         for payload in issues:
+            if payload.get("pull_request") is not None:
+                continue
+
             issue = self.session.scalar(select(Issue).where(Issue.github_id == payload["id"]))
 
             if issue is None:

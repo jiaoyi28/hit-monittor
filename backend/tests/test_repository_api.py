@@ -94,3 +94,33 @@ def test_get_repository_detail_returns_issue_pr_and_release_sections(session, cl
     assert payload["issues"][0]["title"] == "Issue title"
     assert payload["pull_requests"][0]["title"] == "PR title"
     assert payload["releases"][0]["title"] == "1.0.0"
+
+
+def test_post_repository_syncs_repository_from_github_url(client, monkeypatch) -> None:
+    from app.api.routes import repositories as repositories_route
+
+    def stub_add_repository_from_url(session, url: str):
+        assert url == "https://github.com/openai/openai-python"
+        session.add(
+            Repository(
+                owner="openai",
+                name="openai-python",
+                full_name="openai/openai-python",
+                description="Python library for the OpenAI API",
+                html_url=url,
+            )
+        )
+        session.commit()
+        repository = session.query(Repository).one()
+        return repositories_route.RepositoryListItem.model_validate(repository, from_attributes=True)
+
+    monkeypatch.setattr(repositories_route.repository_service, "add_repository_from_url", stub_add_repository_from_url)
+
+    response = client.post(
+        "/api/repositories",
+        json={"url": "https://github.com/openai/openai-python"},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["full_name"] == "openai/openai-python"

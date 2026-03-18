@@ -1,5 +1,6 @@
 import type {
   DashboardResponse,
+  RepositoryCreateRequest,
   RepositoryDetailResponse,
   RepositoryListItem,
   SettingsResponse,
@@ -22,6 +23,16 @@ export async function getDashboard(): Promise<DashboardResponse> {
 
 export async function getRepositories(): Promise<RepositoryListItem[]> {
   return request<RepositoryListItem[]>("/api/repositories");
+}
+
+export async function addRepository(payload: RepositoryCreateRequest): Promise<RepositoryListItem> {
+  return request<RepositoryListItem>("/api/repositories", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getRepositoryDetail(repositoryId: number): Promise<RepositoryDetailResponse> {

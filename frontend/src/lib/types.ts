@@ -18,6 +18,10 @@ export type RepositoryListItem = {
   enabled: boolean;
 };
 
+export type RepositoryCreateRequest = {
+  url: string;
+};
+
 export type RepositoryDetailResponse = {
   repository: {
     id: number;

@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 
+class RepositoryCreateRequest(BaseModel):
+    url: str
+
+
 class RepositoryListItem(BaseModel):
     id: int
     full_name: str
